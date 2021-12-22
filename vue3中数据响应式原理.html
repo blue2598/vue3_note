@@ -1,0 +1,83 @@
+<!--
+ * @Descripttion: 
+ * @version: 
+ * @Author: Young
+ * @Date: 2021-11-26 15:12:59
+ * @LastEditors: Do not Edit
+ * @LastEditTime: 2021-11-26 16:17:54
+ * @FilePath: \notejse:\Demo\vue3_note\vue3中数据响应式原理.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        // ES6新的js内置构造函数Proxy();
+        // 开始
+        let data = { a: 1, person: { name: "ysl", age: 19, sex: "女" } };
+        // const _data = new Proxy(data, {});//实现代理，但是更改值捕获后无法进行其他操作
+        let _data = new Proxy(data, {
+            get(target, propName) {
+                console.log("我读取了" + target + "里面的" + propName);
+                return target[propName]
+            },
+            // 新增属性这里也能检测到
+            set(target, propName, value) {
+                console.log(value);
+                console.log("我更改了" + target + "里面的" + propName);
+                target[propName] = value;
+            },
+            deleteProperty(target, propName) {
+                console.log("我删除了" + target + "里面的" + propName);
+                return delete target[propName]
+            },
+        })
+        _data.a = 2;
+        // 到这里，需要知道另一种读写删对象的方式Reflect()(ES6语法);
+        let obj = { a: 1, b: 2 };
+        // Reflect.set();Reflect.get();Reflect.deleteProperty()
+        console.log("Reflect.get():", Reflect.get(obj, 'a'));
+        console.log("Reflect.set():", Reflect.set(obj, 'c', 9));
+        // 并且Reflct身上也有defineProperty方法,和Object.defineProperty的区别是
+        Object.defineProperty(obj, 'c', {
+            value: 3
+        })
+        // Object.defineProperty(obj, 'c', {
+        //     value: 8
+        // })//Cannot redefine property: c at Function.defineProperty(<anonymous>)
+        // 需要使用try catch捕获异常
+        // 但是使用Reflect.defineProperty();有返回值
+        let res1 = Reflect.defineProperty(obj, 'c', {
+            value: 3
+        })
+        let res2 = Reflect.defineProperty(obj, 'c', {
+            value: 8
+        })
+        console.log(res1);
+        console.log(res2);
+        // 所以当封装框架的时候使用Reflect方式更容易捕获错误，以上代码可变为
+        let data1 = { a: 1, person: { name: "ysl", age: 19, sex: "女" } };
+        // const _data = new Proxy(data, {});//实现代理，但是更改值捕获后无法进行其他操作
+        let _data1 = new Proxy(data, {
+            get(target, propName) {
+                return Reflect.get(target, propName)
+            },
+            // 新增属性这里也能检测到
+            set(target, propName, value) {
+                Reflect.set(target, propName, value)
+            },
+            deleteProperty(target, propName) {
+                return Reflect.deleteProperty(target, propName)
+            },
+        })
+    </script>
+</body>
+
+</html>
